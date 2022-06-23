@@ -48,8 +48,12 @@ export default {
   },
   methods: {
     async fetchAniRolls() {
-      let randInts = [591, 951, 1519]
+      let randInts = []
       let aniRolls = [];
+
+      for (let h = 0; h < 3; h++) {
+        randInts.push(this.randomIntFromInterval(1,1519));
+      }
 
       for (let i in randInts) {
         let query = `
@@ -120,6 +124,10 @@ export default {
         aniRolls[149]
       ];
       store.aniRandom = aniRandom;
+    },
+    randomIntFromInterval(min: number, max: number) {
+      // https://stackoverflow.com/a/7228322 CC BY-SA 4.0
+      return Math.floor(Math.random() * (max - min + 1) + min)
     }
   },
 }
