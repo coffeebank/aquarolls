@@ -6,7 +6,7 @@
     "build": "run-p build-only",
     "preview": "vite preview --port 4173",
     "test:unit": "vitest --environment jsdom",
-    "build-only": "vite build",
+    "build-only": "vite build --base=/aquarolls/",
     "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false"
   },
   "dependencies": {
