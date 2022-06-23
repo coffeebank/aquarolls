@@ -13,28 +13,34 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-5 p-8 pb-16 gap-4 w-full">
-      <div v-for="aCard in store.aniRandom" :key="aCard">
-        <div class="bg-gray-200 text-gray-700 rounded-md overflow-hidden shadow-lg">
-          <div class="p-4 flex-grow">
-            <div class="text-lg font-bold">{{ aCard.name.userPreferred }}</div>
+    <div class="grid grid-cols-2 md:grid-cols-5 p-8 pb-16 gap-4 w-full" v-if="store.aniRandom">
+      <div v-for="aCard in store.aniRandom" :key="aCard.id" class="rounded-md overflow-hidden">
+        <div class="bg-gray-200 text-gray-700 border-l-4 border-gray-700 px-3 py-2 overflow-hidden shadow-lg">
+          <div class="pt-2 pb-4 flex-grow">
+            <div class="text-lg pb-1 font-bold">{{ aCard.name.userPreferred }}</div>
+            <div class="pb-1">{{ aCard.media.nodes[0].title.romaji }}</div>
+            <div>💎&ensp;<a :href="aCard.media.nodes[0].siteUrl" class="text-gray-600" target="_blank" rel="noopener noreferrer">{{ aCard.media.nodes[0].id }}</a></div>
           </div>
-          <img :src="aCard.image.large" class="object-cover w-full h-64" />
-          <div class="p-4 flex-grow">
+          <img :src="aCard.image.large" class="object-cover w-full h-64 rounded" />
+          <div class="py-2 flex-grow">
             <div class="text-sm">ID: {{ aCard.id }}</div>
           </div>
         </div>
       </div>
+    </div>
+    <div v-else>
+      {{ store.aniNotice }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useCounterStore } from '../stores/counter';
-const store = useCounterStore();
 </script>
 
 <script lang="ts">
+const store = useCounterStore();
+
 export default {
   data() {
     return {
@@ -43,7 +49,7 @@ export default {
   methods: {
     async fetchAniRolls() {
       let randInts = [591, 951, 1519]
-      let aniRolls: any[] = [];
+      let aniRolls = [];
 
       for (let i in randInts) {
         let query = `
@@ -51,9 +57,6 @@ export default {
             Page(page:${randInts[i]}, perPage:50) {
               characters(sort:ID) {
                 name {
-                  first
-                  middle
-                  last
                   full
                   native
                   userPreferred
@@ -63,6 +66,17 @@ export default {
                   medium
                 }
                 id
+                media {
+                  nodes {
+                    title {
+                      romaji
+                      english
+                      native
+                    }
+                    id
+                    siteUrl
+                  }
+                }
               }
             }
           }
@@ -70,12 +84,12 @@ export default {
         let aniRollsRaw = await fetch("https://graphql.anilist.co/", {
           method: 'POST',
           headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
           body: JSON.stringify({
-              query: query,
-              // variables: variables
+            query: query,
+            // variables: variables
           })
         });
         let aniData = await aniRollsRaw.json();
@@ -83,11 +97,16 @@ export default {
           aniRolls.push(aniData.data.Page.characters[j]);
         };
       }
-      this.store.aniRolls = aniRolls;
+      store.aniRolls = aniRolls;
       return aniRolls;
     },
     async fetchRandomRolls() {
-      let aniRolls = await this.fetchAniRolls();
+      let aniRolls;
+      try {
+        aniRolls = await this.fetchAniRolls();
+      } catch {
+        return store.aniNotice = "Error: Failed to fetch data"
+      }
       let aniRandom = [
         aniRolls[6],
         aniRolls[12],
@@ -100,7 +119,7 @@ export default {
         aniRolls[146],
         aniRolls[149]
       ];
-      this.store.aniRandom = aniRandom;
+      store.aniRandom = aniRandom;
     }
   },
 }
